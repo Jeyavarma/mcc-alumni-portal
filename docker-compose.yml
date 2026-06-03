@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mcc_postgres
+    environment:
+      POSTGRES_DB: mcc_portal
+      POSTGRES_USER: mcc_user
+      POSTGRES_PASSWORD: mcc_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - mcc_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mcc_user -d mcc_portal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: mcc_server
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://mcc_user:mcc_password@postgres:5432/mcc_portal
+      - JWT_SECRET=mcc-alumni-portal-secret-jwt-2024
+      - CLIENT_URL=http://localhost:3000
+    ports:
+      - "5000:5000"
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: mcc_client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+
+volumes:
+  mcc_pgdata:

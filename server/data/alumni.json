@@ -1,0 +1,7 @@
+[
+  {"id":1,"name":"Dr. Samuel Rajan","batch":"1999","dept":"Physics","company":"ISRO","role":"Senior Scientist","city":"Bengaluru","email":"samuel.rajan@isro.gov.in","phone":"+91 98401 12345","engagement":"Active","donationTotal":150000,"lastContact":"2024-03-15","avatar":"SR"},
+  {"id":2,"name":"Ms. Priya Annamalai","batch":"2005","dept":"Computer Science","company":"Google India","role":"Engineering Manager","city":"Hyderabad","email":"priya.a@google.com","phone":"+91 99400 23456","engagement":"Active","donationTotal":75000,"lastContact":"2024-04-02","avatar":"PA"},
+  {"id":3,"name":"Mr. Benjamin Matthew","batch":"1975","dept":"Commerce","company":"HDFC Bank","role":"Retired MD","city":"Chennai","email":"ben.matthew@gmail.com","phone":"+91 94450 34567","engagement":"Donor","donationTotal":500000,"lastContact":"2024-02-20","avatar":"BM"},
+  {"id":4,"name":"Dr. Anitha Krishnamurthy","batch":"1990","dept":"Botany","company":"Tamil Nadu Agricultural Univ.","role":"Professor","city":"Coimbatore","email":"anitha.k@tnau.ac.in","phone":"+91 93820 45678","engagement":"Moderately Active","donationTotal":25000,"lastContact":"2024-01-10","avatar":"AK"},
+  {"id":5,"name":"Mr. John Peter Rajasekaran","batch":"2000","dept":"English","company":"The Hindu","role":"Associate Editor","city":"Chennai","email":"johnpeter@thehindu.com","phone":"+91 98840 56789","engagement":"Active","donationTotal":50000,"lastContact":"2024-03-28","avatar":"JP"}
+]

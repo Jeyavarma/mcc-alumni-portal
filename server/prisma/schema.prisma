@@ -1,0 +1,366 @@
+// ═══════════════════════════════════════════════════════════════
+//  MCC Alumni Portal — Prisma Database Schema
+//  Database: PostgreSQL
+//  ORM: Prisma
+// ═══════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  STAFF
+  ALUMNI
+  CORPORATE
+}
+
+enum EngagementStatus {
+  ACTIVE
+  MODERATELY_ACTIVE
+  DONOR
+  INACTIVE
+  LOST
+}
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  UNDER_REVIEW
+  APPROVED
+  COMPLETED
+  REJECTED
+}
+
+enum CommunicationType {
+  EMAIL
+  CALL
+  WHATSAPP
+  MEETING
+  LETTER
+}
+
+enum CommunicationStatus {
+  COMPLETED
+  FOLLOW_UP_DUE
+  PENDING
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  NEAR_GOAL
+  COMPLETED
+  PAUSED
+}
+
+enum ReunionType {
+  SILVER_JUBILEE
+  GOLDEN_JUBILEE
+  DIAMOND_JUBILEE
+  ANNUAL_MEET
+  DEPARTMENTAL
+  SPECIAL
+}
+
+enum RSVPStatus {
+  YES
+  NO
+  MAYBE
+  PENDING
+}
+
+enum CalendarCategory {
+  COMMUNICATION
+  CSR
+  FUNDRAISING
+  DEPARTMENT
+  REUNION
+  REPORTING
+  GENERAL
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ─── Models ───────────────────────────────────────────────────
+
+model User {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  password   String
+  role       Role     @default(ALUMNI)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  alumni     Alumni?
+  articles   Article[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Alumni {
+  id             Int              @id @default(autoincrement())
+  userId         Int?             @unique
+  user           User?            @relation(fields: [userId], references: [id])
+
+  name           String
+  email          String           @unique
+  phone          String?
+  alternateEmail String?
+
+  batch          String           // e.g. "1999"
+  department     String
+  programme      String?          // UG, PG, PhD
+  rollNumber     String?
+
+  company        String?
+  jobTitle       String?
+  industry       String?
+  city           String?
+  state          String?
+  country        String           @default("India")
+  linkedIn       String?
+  website        String?
+
+  engagementStatus EngagementStatus @default(ACTIVE)
+  donationTotal    Float            @default(0)
+  lastContactDate  DateTime?
+
+  avatarUrl      String?
+  bio            String?
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  communications Communication[]
+  donations      Donation[]
+  rsvps          RSVPRecord[]
+
+  @@index([batch, department])
+  @@index([engagementStatus])
+  @@map("alumni")
+}
+
+model Communication {
+  id          Int                 @id @default(autoincrement())
+  alumniId    Int
+  alumni      Alumni              @relation(fields: [alumniId], references: [id], onDelete: Cascade)
+
+  type        CommunicationType
+  subject     String
+  content     String?
+  status      CommunicationStatus @default(COMPLETED)
+  officerName String?
+
+  communicatedAt DateTime          @default(now())
+  followUpDate   DateTime?
+  followUpNotes  String?
+
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([alumniId])
+  @@index([followUpDate])
+  @@map("communications")
+}
+
+model Donation {
+  id                 Int           @id @default(autoincrement())
+  alumniId           Int
+  alumni             Alumni        @relation(fields: [alumniId], references: [id])
+  campaignId         Int?
+  campaign           Campaign?     @relation(fields: [campaignId], references: [id])
+
+  amount             Float
+  currency           String        @default("INR")
+  paymentStatus      PaymentStatus @default(COMPLETED)
+  paymentMethod      String?       // Online, Bank Transfer, Cheque, Cash
+  transactionRef     String?
+
+  acknowledgementSent Boolean      @default(false)
+  acknowledgementDate DateTime?
+
+  donatedAt          DateTime      @default(now())
+  createdAt          DateTime      @default(now())
+
+  @@index([alumniId])
+  @@index([campaignId])
+  @@map("donations")
+}
+
+model Campaign {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String
+  department  String
+  goal        Float
+  raised      Float          @default(0)
+  donorCount  Int            @default(0)
+  status      CampaignStatus @default(ACTIVE)
+
+  startDate   DateTime
+  deadline    DateTime
+  imageUrl    String?
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  donations   Donation[]
+
+  @@map("campaigns")
+}
+
+model Company {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  industry    String
+  csrBudget   Float?
+  contactName String?
+  email       String?
+  phone       String?
+  website     String?
+  city        String?
+  country     String   @default("India")
+
+  focusAreas  String[] // array of strings: ['Education', 'Technology', ...]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  proposals   CSRProposal[]
+
+  @@map("companies")
+}
+
+model CSRProposal {
+  id          Int            @id @default(autoincrement())
+  companyId   Int
+  company     Company        @relation(fields: [companyId], references: [id])
+
+  title       String
+  description String?
+  amount      Float
+  focusArea   String
+  status      ProposalStatus @default(DRAFT)
+  officerName String?
+
+  submittedAt    DateTime?
+  approvedAt     DateTime?
+  completedAt    DateTime?
+  nextFollowUp   DateTime?
+
+  notes       String?
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([status])
+  @@index([companyId])
+  @@map("csr_proposals")
+}
+
+model ReunionEvent {
+  id          Int         @id @default(autoincrement())
+  title       String
+  description String?
+  type        ReunionType
+  batch       String      // "1999" or "All"
+  eventDate   DateTime
+  venue       String
+  status      String      @default("Planning")
+
+  invitesSent Int         @default(0)
+  maxCapacity Int?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  rsvps       RSVPRecord[]
+  gallery     GalleryImage[]
+
+  @@map("reunion_events")
+}
+
+model RSVPRecord {
+  id          Int        @id @default(autoincrement())
+  eventId     Int
+  event       ReunionEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  alumniId    Int
+  alumni      Alumni     @relation(fields: [alumniId], references: [id])
+
+  status      RSVPStatus @default(PENDING)
+  dietaryPref String?
+  guestCount  Int        @default(0)
+  notes       String?
+
+  respondedAt DateTime   @default(now())
+
+  @@unique([eventId, alumniId])
+  @@map("rsvp_records")
+}
+
+model GalleryImage {
+  id       Int          @id @default(autoincrement())
+  eventId  Int
+  event    ReunionEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  url      String
+  caption  String?
+  uploadedBy String?
+  createdAt DateTime    @default(now())
+
+  @@map("gallery_images")
+}
+
+model CalendarEvent {
+  id           Int              @id @default(autoincrement())
+  title        String
+  description  String?
+  eventDate    DateTime
+  category     CalendarCategory @default(GENERAL)
+  reminderDate DateTime?
+  isRecurring  Boolean          @default(false)
+  recurrence   String?          // "monthly", "quarterly", "annually"
+  createdBy    String?
+  createdAt    DateTime         @default(now())
+
+  @@index([eventDate])
+  @@map("calendar_events")
+}
+
+model Article {
+  id          Int           @id @default(autoincrement())
+  title       String
+  excerpt     String
+  content     String
+  category    String
+  imageUrl    String?
+  authorId    Int?
+  author      User?         @relation(fields: [authorId], references: [id])
+  status      ArticleStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("articles")
+}
