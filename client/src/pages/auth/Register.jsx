@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
+/* ── Constants ────────────────────────────────────────────────── */
 const DEPARTMENTS = [
   'English', 'Tamil', 'History', 'Economics', 'Philosophy',
   'Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology',
@@ -14,88 +15,78 @@ const BATCHES = Array.from({ length: 55 }, (_, i) => String(2024 - i));
 
 const PROGRAMMES = ['B.A.', 'B.Sc.', 'B.Com.', 'B.B.A.', 'M.A.', 'M.Sc.', 'M.Com.', 'M.Phil.', 'Ph.D.'];
 
-export default function Register() {
-  const { register } = useAuth();
-  const navigate = useNavigate();
-
-  const [step, setStep] = useState(1); // 2-step form
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  const [form, setForm] = useState({
-    // Step 1 — Account
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    // Step 2 — Alumni Info
-    batch: '',
-    department: '',
-    programme: '',
-    phone: '',
-    company: '',
-    jobTitle: '',
-    city: '',
-    linkedin: '',
-  });
-
-  const set = (field) => (e) =>
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-
-  /* ── Validation ────────────────────────────────────────────── */
-  const validateStep1 = () => {
-    const e = {};
-    if (!form.name.trim())         e.name = 'Full name is required';
-    if (!form.email.includes('@')) e.email = 'Enter a valid email address';
-    if (form.password.length < 6)  e.password = 'Password must be at least 6 characters';
-    if (form.password !== form.confirmPassword)
-                                   e.confirmPassword = 'Passwords do not match';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const validateStep2 = () => {
-    const e = {};
-    if (!form.batch)      e.batch = 'Please select your batch year';
-    if (!form.department) e.department = 'Please select your department';
-    if (!form.programme)  e.programme = 'Please select your programme';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const handleNext = () => {
-    if (validateStep1()) setStep(2);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateStep2()) return;
-
-    setLoading(true);
-    const result = await register(form);
-    setLoading(false);
-
-    if (result.success) {
-      toast.success('Registration submitted! Verification pending.');
-      navigate('/login');
-    } else {
-      toast.error(result.message || 'Registration failed. Please try again.');
-      if (result.field === 'email') {
-        setStep(1);
-        setErrors({ email: result.message });
-      }
-    }
-  };
-
-  /* ── Field component ────────────────────────────────────────── */
-  const Field = ({ label, id, error, children }) => (
+/* ──────────────────────────────────────────────────────────────
+   Field — defined OUTSIDE Register so React never remounts it
+────────────────────────────────────────────────────────────── */
+function Field({ label, id, error, children }) {
+  return (
     <div className="space-y-1">
       <label htmlFor={id} className="input-label">{label}</label>
       {children}
       {error && <p className="text-xs text-red-400 mt-0.5">{error}</p>}
     </div>
   );
+}
 
+/* ──────────────────────────────────────────────────────────────
+   Register Page
+────────────────────────────────────────────────────────────── */
+export default function Register() {
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const [step, setStep]       = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors]   = useState({});
+
+  const [form, setForm] = useState({
+    name: '', email: '', password: '', confirmPassword: '',
+    batch: '', department: '', programme: '',
+    phone: '', company: '', jobTitle: '', city: '', linkedin: '',
+  });
+
+  const set = (field) => (e) =>
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  /* ── Validation ──────────────────────────────────────────── */
+  const validateStep1 = () => {
+    const e = {};
+    if (!form.name.trim())          e.name = 'Full name is required';
+    if (!form.email.includes('@'))  e.email = 'Enter a valid email address';
+    if (form.password.length < 6)   e.password = 'Password must be at least 6 characters';
+    if (form.password !== form.confirmPassword)
+                                    e.confirmPassword = 'Passwords do not match';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const e = {};
+    if (!form.batch)       e.batch = 'Please select your batch year';
+    if (!form.department)  e.department = 'Please select your department';
+    if (!form.programme)   e.programme = 'Please select your programme';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleNext = () => { if (validateStep1()) { setErrors({}); setStep(2); } };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateStep2()) return;
+    setLoading(true);
+    const result = await register(form);
+    setLoading(false);
+    if (result.success) {
+      toast.success('Registration submitted! Verification pending.');
+      navigate('/login');
+    } else {
+      toast.error(result.message || 'Registration failed. Please try again.');
+      if (result.field === 'email') { setStep(1); setErrors({ email: result.message }); }
+    }
+  };
+
+  /* ── Render ───────────────────────────────────────────────── */
   return (
     <div
       className="min-h-screen flex"
@@ -105,38 +96,25 @@ export default function Register() {
           'radial-gradient(ellipse at 70% 0%, rgba(28,27,59,0.9) 0%, transparent 60%), radial-gradient(ellipse at 20% 100%, rgba(234,189,83,0.06) 0%, transparent 60%)',
       }}
     >
-      {/* ── Left panel ────────────────────────────────────────── */}
+      {/* ── Left decorative panel ───────────────────────────── */}
       <div
         className="hidden lg:flex flex-col justify-between p-12 w-5/12 relative overflow-hidden"
         style={{ background: 'linear-gradient(160deg, #1c1b3b 0%, #111027 60%, #080815 100%)' }}
       >
-        {/* Grid overlay */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              'linear-gradient(#2e2d5c 1px, transparent 1px), linear-gradient(90deg, #2e2d5c 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: 'linear-gradient(#2e2d5c 1px, transparent 1px), linear-gradient(90deg, #2e2d5c 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }} />
 
-        {/* Logo */}
         <div className="relative z-10 flex items-center gap-4">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
-            style={{ background: 'rgba(234,189,83,0.12)', border: '1px solid rgba(234,189,83,0.35)' }}
-          >
-            ⚓
-          </div>
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+            style={{ background: 'rgba(234,189,83,0.12)', border: '1px solid rgba(234,189,83,0.35)' }}>⚓</div>
           <div>
             <div className="text-xl font-bold text-[#f0ecff]">Madras Christian College</div>
-            <div className="text-sm font-serif italic" style={{ color: '#eabd53' }}>
-              Est. 1837 · In Hoc Signo
-            </div>
+            <div className="text-sm font-serif italic" style={{ color: '#eabd53' }}>Est. 1837 · In Hoc Signo</div>
           </div>
         </div>
 
-        {/* Headline */}
         <div className="relative z-10">
           <h1 className="text-4xl font-bold leading-tight mb-4" style={{ color: '#f0ecff' }}>
             Join the<br />
@@ -144,11 +122,9 @@ export default function Register() {
             <br />Network
           </h1>
           <p className="text-base leading-relaxed mb-8" style={{ color: '#8885b8' }}>
-            Register to connect with 12,800+ fellow MCC alumni, participate in reunions,
-            donate to campaigns, and stay connected with your alma mater.
+            Register to connect with 12,800+ fellow MCC alumni, participate in
+            reunions, donate to campaigns, and stay connected with your alma mater.
           </p>
-
-          {/* Benefits */}
           {[
             { icon: '🎓', text: 'Access reunion events & RSVPs' },
             { icon: '💰', text: 'Donate to department campaigns' },
@@ -156,10 +132,8 @@ export default function Register() {
             { icon: '📰', text: 'Receive alumni news & updates' },
           ].map((b) => (
             <div key={b.text} className="flex items-center gap-3 mb-3">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
-                style={{ background: 'rgba(234,189,83,0.1)', border: '1px solid rgba(234,189,83,0.25)' }}
-              >
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
+                style={{ background: 'rgba(234,189,83,0.1)', border: '1px solid rgba(234,189,83,0.25)' }}>
                 {b.icon}
               </div>
               <span className="text-sm" style={{ color: '#a8a5e0' }}>{b.text}</span>
@@ -172,7 +146,7 @@ export default function Register() {
         </div>
       </div>
 
-      {/* ── Right panel — Form ────────────────────────────────── */}
+      {/* ── Right panel — Form ───────────────────────────────── */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-lg animate-fade-in">
 
@@ -188,45 +162,33 @@ export default function Register() {
             {/* Header */}
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-[#f0ecff] mb-1">Create Account</h2>
-              <p className="text-sm" style={{ color: '#8885b8' }}>
-                Register as an MCC alumni member
-              </p>
+              <p className="text-sm" style={{ color: '#8885b8' }}>Register as an MCC alumni member</p>
             </div>
 
             {/* Step indicator */}
-            <div className="flex items-center gap-3 mb-7">
+            <div className="flex items-center mb-7">
               {[1, 2].map((s) => (
-                <div key={s} className="flex items-center gap-2 flex-1">
+                <div key={s} className="flex items-center flex-1">
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-300"
                     style={{
-                      background: step >= s
-                        ? 'linear-gradient(135deg, #eabd53, #f5e89a)'
-                        : 'rgba(46,45,92,0.5)',
+                      background: step >= s ? 'linear-gradient(135deg, #eabd53, #f5e89a)' : 'rgba(46,45,92,0.5)',
                       color: step >= s ? '#111027' : '#4a4878',
                     }}
                   >
                     {step > s ? '✓' : s}
                   </div>
-                  <span
-                    className="text-xs font-medium"
-                    style={{ color: step >= s ? '#eabd53' : '#4a4878' }}
-                  >
+                  <span className="text-xs font-medium ml-2 mr-2" style={{ color: step >= s ? '#eabd53' : '#4a4878' }}>
                     {s === 1 ? 'Account Details' : 'Alumni Information'}
                   </span>
-                  {s < 2 && (
-                    <div
-                      className="flex-1 h-px ml-1"
-                      style={{ background: step > s ? '#eabd53' : '#2e2d5c' }}
-                    />
-                  )}
+                  {s < 2 && <div className="flex-1 h-px" style={{ background: step > s ? '#eabd53' : '#2e2d5c' }} />}
                 </div>
               ))}
             </div>
 
-            {/* ── STEP 1: Account Details ────────────────────── */}
+            {/* ── STEP 1 ─────────────────────────────────────── */}
             {step === 1 && (
-              <div className="space-y-4 animate-fade-in">
+              <div className="space-y-4">
                 <Field label="Full Name *" id="reg-name" error={errors.name}>
                   <input
                     id="reg-name"
@@ -274,6 +236,7 @@ export default function Register() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={handleNext}
                   className="btn-gold w-full justify-center py-3 text-base mt-2"
                 >
@@ -282,157 +245,91 @@ export default function Register() {
               </div>
             )}
 
-            {/* ── STEP 2: Alumni Information ─────────────────── */}
+            {/* ── STEP 2 ─────────────────────────────────────── */}
             {step === 2 && (
-              <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in">
+              <form onSubmit={handleSubmit} className="space-y-4">
 
                 <div className="grid grid-cols-3 gap-3">
                   <Field label="Programme *" id="reg-prog" error={errors.programme}>
-                    <select
-                      id="reg-prog"
-                      value={form.programme}
-                      onChange={set('programme')}
-                      className="select"
-                    >
+                    <select id="reg-prog" value={form.programme} onChange={set('programme')} className="select">
                       <option value="">Select</option>
-                      {PROGRAMMES.map((p) => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
+                      {PROGRAMMES.map((p) => <option key={p} value={p}>{p}</option>)}
                     </select>
                   </Field>
 
                   <Field label="Department *" id="reg-dept" error={errors.department}>
-                    <select
-                      id="reg-dept"
-                      value={form.department}
-                      onChange={set('department')}
-                      className="select"
-                    >
+                    <select id="reg-dept" value={form.department} onChange={set('department')} className="select">
                       <option value="">Select</option>
-                      {DEPARTMENTS.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
+                      {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </Field>
 
                   <Field label="Batch Year *" id="reg-batch" error={errors.batch}>
-                    <select
-                      id="reg-batch"
-                      value={form.batch}
-                      onChange={set('batch')}
-                      className="select"
-                    >
+                    <select id="reg-batch" value={form.batch} onChange={set('batch')} className="select">
                       <option value="">Year</option>
-                      {BATCHES.map((y) => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
+                      {BATCHES.map((y) => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </Field>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Phone Number" id="reg-phone">
-                    <input
-                      id="reg-phone"
-                      type="tel"
-                      value={form.phone}
-                      onChange={set('phone')}
-                      className="input"
-                      placeholder="+91 XXXXX XXXXX"
-                    />
+                    <input id="reg-phone" type="tel" value={form.phone} onChange={set('phone')}
+                      className="input" placeholder="+91 XXXXX XXXXX" />
                   </Field>
                   <Field label="Current City" id="reg-city">
-                    <input
-                      id="reg-city"
-                      type="text"
-                      value={form.city}
-                      onChange={set('city')}
-                      className="input"
-                      placeholder="Chennai"
-                    />
+                    <input id="reg-city" type="text" value={form.city} onChange={set('city')}
+                      className="input" placeholder="Chennai" />
                   </Field>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Current Company / Organisation" id="reg-company">
-                    <input
-                      id="reg-company"
-                      type="text"
-                      value={form.company}
-                      onChange={set('company')}
-                      className="input"
-                      placeholder="e.g. ISRO, TCS, TNPSC…"
-                    />
+                  <Field label="Company / Organisation" id="reg-company">
+                    <input id="reg-company" type="text" value={form.company} onChange={set('company')}
+                      className="input" placeholder="ISRO, TCS, TNPSC…" />
                   </Field>
                   <Field label="Designation / Job Title" id="reg-title">
-                    <input
-                      id="reg-title"
-                      type="text"
-                      value={form.jobTitle}
-                      onChange={set('jobTitle')}
-                      className="input"
-                      placeholder="Senior Engineer…"
-                    />
+                    <input id="reg-title" type="text" value={form.jobTitle} onChange={set('jobTitle')}
+                      className="input" placeholder="Senior Engineer…" />
                   </Field>
                 </div>
 
                 <Field label="LinkedIn Profile URL" id="reg-linkedin">
-                  <input
-                    id="reg-linkedin"
-                    type="url"
-                    value={form.linkedin}
-                    onChange={set('linkedin')}
-                    className="input"
-                    placeholder="https://linkedin.com/in/yourname"
-                  />
+                  <input id="reg-linkedin" type="url" value={form.linkedin} onChange={set('linkedin')}
+                    className="input" placeholder="https://linkedin.com/in/yourname" />
                 </Field>
 
-                {/* Notice */}
-                <div
-                  className="p-3 rounded-lg text-xs"
-                  style={{
-                    background: 'rgba(234,189,83,0.08)',
-                    border: '1px solid rgba(234,189,83,0.2)',
-                    color: '#8885b8',
-                  }}
-                >
+                <div className="p-3 rounded-lg text-xs" style={{
+                  background: 'rgba(234,189,83,0.08)',
+                  border: '1px solid rgba(234,189,83,0.2)',
+                  color: '#8885b8',
+                }}>
                   ℹ️ Your account will be reviewed by the Alumni Office within{' '}
                   <span style={{ color: '#eabd53' }}>2 working days</span>. You'll receive
                   a confirmation email once approved.
                 </div>
 
                 <div className="flex gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => { setStep(1); setErrors({}); }}
-                    className="btn-ghost flex-1 justify-center py-3"
-                  >
+                  <button type="button" onClick={() => { setStep(1); setErrors({}); }}
+                    className="btn-ghost flex-1 justify-center py-3">
                     ← Back
                   </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn-gold flex-1 justify-center py-3 text-base"
-                  >
+                  <button type="submit" disabled={loading}
+                    className="btn-gold flex-1 justify-center py-3 text-base">
                     {loading ? (
                       <>
                         <span className="animate-spin inline-block w-4 h-4 border-2 border-[#111027]/30 border-t-[#111027] rounded-full" />
-                        Submitting…
+                        {' '}Submitting…
                       </>
-                    ) : (
-                      '✓ Submit Registration'
-                    )}
+                    ) : '✓ Submit Registration'}
                   </button>
                 </div>
               </form>
             )}
 
-            {/* Footer link */}
             <p className="text-center text-xs mt-5" style={{ color: '#4a4878' }}>
               Already have an account?{' '}
-              <Link to="/login" className="font-medium" style={{ color: '#eabd53' }}>
-                Sign In →
-              </Link>
+              <Link to="/login" className="font-medium" style={{ color: '#eabd53' }}>Sign In →</Link>
             </p>
           </div>
         </div>
