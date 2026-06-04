@@ -1,23 +1,20 @@
 {
   "name": "mcc-alumni-portal-server",
   "version": "1.0.0",
-  "description": "MCC Alumni & Development Office Portal — Backend API",
+  "description": "MCC Alumni & Development Office Portal — Backend API (MongoDB)",
   "main": "src/app.js",
   "scripts": {
-    "start":  "node src/app.js",
-    "dev":    "nodemon src/app.js",
-    "db:push": "npx prisma db push",
-    "db:seed": "node prisma/seed.js",
-    "db:studio": "npx prisma studio"
+    "start": "node src/app.js",
+    "dev":   "nodemon src/app.js"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "express-async-errors": "^3.1.1",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1"
+    "bcryptjs":    "^2.4.3",
+    "cors":        "^2.8.5",
+    "dotenv":      "^16.4.5",
+    "express":     "^4.21.1",
+    "jsonwebtoken":"^9.0.2",
+    "mongoose":    "^8.4.1",
+    "multer":      "^1.4.5-lts.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

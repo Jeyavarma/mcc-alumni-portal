@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui';
 
@@ -23,7 +23,7 @@ export default function Login() {
     setError('');
     setLoading(true);
     await new Promise(r => setTimeout(r, 600));
-    const result = login(email, password);
+    const result = await login(email, password);
     setLoading(false);
     if (result.success) {
       navigate('/dashboard');
@@ -162,6 +162,14 @@ export default function Login() {
                 Click any card to auto-fill credentials
               </p>
             </div>
+
+            {/* Register link */}
+            <p className="text-center text-xs mt-5" style={{ color: '#4a4878' }}>
+              New to MCC Alumni Portal?{' '}
+              <Link to="/register" className="font-semibold" style={{ color: '#eabd53' }}>
+                Register here →
+              </Link>
+            </p>
           </div>
 
           <p className="text-center text-xs mt-4" style={{ color: '#4a3538' }}>

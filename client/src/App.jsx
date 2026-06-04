@@ -7,6 +7,7 @@ import AppLayout from './components/layout/AppLayout';
 
 // Pages
 import Login              from './pages/auth/Login';
+import Register           from './pages/auth/Register';
 import Dashboard          from './pages/dashboard/Dashboard';
 import AlumniCRM          from './pages/alumni/AlumniCRM';
 import Fundraising        from './pages/fundraising/Fundraising';
@@ -25,16 +26,17 @@ export default function App() {
           position="top-right"
           toastOptions={{
             style: {
-              background: '#221518',
-              color: '#f5ede0',
-              border: '1px solid #3d2228',
+              background: '#1c1b3b',
+              color: '#f0ecff',
+              border: '1px solid #2e2d5c',
               borderRadius: '12px',
             },
           }}
         />
         <Routes>
           {/* Public */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/login"    element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Protected — inside AppLayout */}
           <Route element={<AppLayout />}>
