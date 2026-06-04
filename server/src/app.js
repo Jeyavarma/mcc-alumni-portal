@@ -119,8 +119,13 @@ app.use((err, req, res, _next) => {
   res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
-/* ── Start server ─────────────────────────────────────────── */
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`🚀 MCC API running on port ${PORT} [${process.env.NODE_ENV}]`)
-);
+/* ── Start server (Render / local) ───────────────────────────── */
+/* Vercel runs the file as a serverless function — no listen needed */
+if (process.env.NODE_ENV !== 'production' || process.env.RENDER) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () =>
+    console.log(`🚀 MCC API running on port ${PORT} [${process.env.NODE_ENV}]`)
+  );
+}
+
+module.exports = app;   // ← required for Vercel serverless
